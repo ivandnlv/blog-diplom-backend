@@ -6,6 +6,7 @@ import { HealthModule } from './health/health.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { PostsModule } from './posts/posts.module';
+import { CommentsModule } from './comments/comments.module';
 
 @Module({
   imports: [
@@ -16,7 +17,8 @@ import { PostsModule } from './posts/posts.module';
     HealthModule,
     AuthModule,
     UsersModule,
-    PostsModule, // ← добавили
+    PostsModule,
+    CommentsModule, // ← добавили
   ],
   controllers: [AppController],
   providers: [AppService],
