@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { Post, Prisma } from '@prisma/client';
+import { PaginatedResult } from '../common/pagination/pagination.types';
 
 export type PostEntity = Post;
 
@@ -90,10 +91,27 @@ export class PostsService {
 
   // --- админские методы ---
 
-  async findAll(): Promise<PostEntity[]> {
-    return this.prisma.post.findMany({
-      orderBy: { createdAt: 'desc' },
-    });
+  async findAll(page = 1, limit = 20): Promise<PaginatedResult<PostEntity>> {
+    const skip = (page - 1) * limit;
+
+    const [items, total] = await this.prisma.$transaction([
+      this.prisma.post.findMany({
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+      this.prisma.post.count(),
+    ]);
+
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      items,
+      total,
+      page,
+      limit,
+      totalPages,
+    };
   }
 
   async createPost(input: CreatePostInput): Promise<PostEntity> {

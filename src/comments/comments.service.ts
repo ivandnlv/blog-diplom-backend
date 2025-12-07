@@ -2,6 +2,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { Comment } from '@prisma/client';
+import { PaginatedResult } from '../common/pagination/pagination.types';
 
 export type CommentEntity = Comment;
 
@@ -50,6 +51,32 @@ export class CommentsService {
         createdAt: 'desc',
       },
     });
+  }
+
+  async findAllPaginated(
+    page = 1,
+    limit = 20,
+  ): Promise<PaginatedResult<CommentEntity>> {
+    const skip = (page - 1) * limit;
+
+    const [items, total] = await this.prisma.$transaction([
+      this.prisma.comment.findMany({
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+      this.prisma.comment.count(),
+    ]);
+
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      items,
+      total,
+      page,
+      limit,
+      totalPages,
+    };
   }
 
   async approveComment(id: number): Promise<CommentEntity> {
