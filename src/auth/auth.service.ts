@@ -1,38 +1,52 @@
 // src/auth/auth.service.ts
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import { PrismaService } from '../prisma/prisma.service';
+import { User, UserRole } from '@prisma/client';
 
 @Injectable()
 export class AuthService {
   constructor(
-    private readonly configService: ConfigService,
+    private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
   ) {}
 
-  private validateAdminCredentials(email: string, password: string): boolean {
-    const adminEmail = this.configService.get<string>('ADMIN_EMAIL');
-    const adminPassword = this.configService.get<string>('ADMIN_PASSWORD');
+  private async validateUser(
+    email: string,
+    password: string,
+  ): Promise<User | null> {
+    const user = await this.prisma.user.findUnique({
+      where: { email },
+    });
 
-    if (!adminEmail || !adminPassword) {
-      return false;
+    if (!user) {
+      return null;
     }
 
-    return email === adminEmail && password === adminPassword;
+    // ⚠️ ВРЕМЕННО: сравниваем пароль в лоб.
+    // В следующем шаге заменим на нормальный hash (bcrypt или аналог).
+    if (user.passwordHash !== password) {
+      return null;
+    }
+
+    return user;
   }
 
-  login(email: string, password: string): { accessToken: string } {
-    const isValid = this.validateAdminCredentials(email, password);
+  async login(
+    email: string,
+    password: string,
+  ): Promise<{ accessToken: string }> {
+    const user = await this.validateUser(email, password);
 
-    if (!isValid) {
+    // Пускаем в админку только ADMIN
+    if (!user || user.role !== UserRole.ADMIN) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    // payload токена — минимальный, без лишнего
     const payload = {
-      sub: 'admin', // subject — можем использовать строку, так как админ один
-      email,
-      role: 'admin',
+      sub: user.id,
+      email: user.email,
+      role: user.role,
     };
 
     const accessToken = this.jwtService.sign(payload);
