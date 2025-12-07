@@ -7,6 +7,7 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { PostsModule } from './posts/posts.module';
 import { CommentsModule } from './comments/comments.module';
+import { PrismaModule } from './prisma/prisma.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { CommentsModule } from './comments/comments.module';
       isGlobal: true,
       envFilePath: '.env',
     }),
+    PrismaModule,
     HealthModule,
     AuthModule,
     UsersModule,
