@@ -11,9 +11,9 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CommentsService, CommentEntity } from './comments.service';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Query } from '@nestjs/common';
-import { AdminCommentsQueryDto } from './dto/admin-comments-query.dto';
 import { ApiQuery } from '@nestjs/swagger';
 import { PaginatedResult } from '../common/pagination/pagination.types';
+import { PaginationQueryDto } from '../common/pagination/pagination-query.dto';
 
 @ApiTags('Admin / Comments')
 @ApiBearerAuth()
@@ -26,7 +26,7 @@ export class AdminCommentsController {
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
   async getAllComments(
-    @Query() query: AdminCommentsQueryDto,
+    @Query() query: PaginationQueryDto,
   ): Promise<PaginatedResult<CommentEntity>> {
     const page = query.page ?? 1;
     const limit = query.limit ?? 10;

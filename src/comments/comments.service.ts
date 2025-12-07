@@ -18,16 +18,59 @@ export interface CreateCommentInput {
 export class CommentsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findApprovedByPostId(postId: number): Promise<CommentEntity[]> {
-    return this.prisma.comment.findMany({
-      where: {
-        postId,
-        isApproved: true,
-      },
-      orderBy: {
-        createdAt: 'asc',
-      },
-    });
+  async findApprovedByPostId(
+    postId: number,
+    page = 1,
+    limit = 20,
+  ): Promise<PaginatedResult<CommentEntity>> {
+    if (limit === 0) {
+      const items = await this.prisma.comment.findMany({
+        where: {
+          postId,
+          isApproved: true,
+        },
+        orderBy: { createdAt: 'asc' },
+      });
+      const total = items.length;
+
+      return {
+        items,
+        total,
+        page: 1,
+        limit: 0,
+        totalPages: 1,
+      };
+    }
+
+    const skip = (page - 1) * limit;
+
+    const [items, total] = await this.prisma.$transaction([
+      this.prisma.comment.findMany({
+        where: {
+          postId,
+          isApproved: true,
+        },
+        orderBy: { createdAt: 'asc' },
+        skip,
+        take: limit,
+      }),
+      this.prisma.comment.count({
+        where: {
+          postId,
+          isApproved: true,
+        },
+      }),
+    ]);
+
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      items,
+      total,
+      page,
+      limit,
+      totalPages,
+    };
   }
 
   async createForPost(input: CreateCommentInput): Promise<CommentEntity> {
@@ -57,6 +100,21 @@ export class CommentsService {
     page = 1,
     limit = 20,
   ): Promise<PaginatedResult<CommentEntity>> {
+    if (limit === 0) {
+      const items = await this.prisma.comment.findMany({
+        orderBy: { createdAt: 'desc' },
+      });
+      const total = items.length;
+
+      return {
+        items,
+        total,
+        page: 1,
+        limit: 0,
+        totalPages: 1,
+      };
+    }
+
     const skip = (page - 1) * limit;
 
     const [items, total] = await this.prisma.$transaction([

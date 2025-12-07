@@ -1,20 +1,28 @@
-// src/posts/posts.controller.ts
-import { Controller, Get, Param } from '@nestjs/common';
+import { Controller, Get, Param, Query } from '@nestjs/common';
 import { PostsService, PostEntity } from './posts.service';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiTags, ApiQuery } from '@nestjs/swagger';
+import { PaginationQueryDto } from '../common/pagination/pagination-query.dto';
+import { PaginatedResult } from '../common/pagination/pagination.types';
 
 @ApiTags('Posts')
 @Controller('posts')
 export class PostsController {
   constructor(private readonly postsService: PostsService) {}
 
-  // GET /posts — список опубликованных постов
+  // GET /api/posts?page=&limit=
   @Get()
-  async getPublishedPosts(): Promise<PostEntity[]> {
-    return this.postsService.findAllPublished();
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  async getPublishedPosts(
+    @Query() query: PaginationQueryDto,
+  ): Promise<PaginatedResult<PostEntity>> {
+    const page = query.page ?? 1;
+    const limit = query.limit ?? 10;
+
+    return this.postsService.findAllPublished(page, limit);
   }
 
-  // GET /posts/:slug — один опубликованный пост по slug
+  // GET /api/posts/:slug — детальный, можно оставить без пагинации
   @Get(':slug')
   async getPostBySlug(@Param('slug') slug: string): Promise<PostEntity> {
     return this.postsService.findPublishedBySlug(slug);

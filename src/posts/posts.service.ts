@@ -67,11 +67,49 @@ export class PostsService {
 
   // --- публичные методы ---
 
-  async findAllPublished(): Promise<PostEntity[]> {
-    return this.prisma.post.findMany({
-      where: { published: true },
-      orderBy: { createdAt: 'desc' },
-    });
+  async findAllPublished(
+    page = 1,
+    limit = 10,
+  ): Promise<PaginatedResult<PostEntity>> {
+    if (limit === 0) {
+      const items = await this.prisma.post.findMany({
+        where: { published: true },
+        orderBy: { createdAt: 'desc' },
+      });
+      const total = items.length;
+
+      return {
+        items,
+        total,
+        page: 1,
+        limit: 0,
+        totalPages: 1,
+      };
+    }
+
+    const skip = (page - 1) * limit;
+
+    const [items, total] = await this.prisma.$transaction([
+      this.prisma.post.findMany({
+        where: { published: true },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+      this.prisma.post.count({
+        where: { published: true },
+      }),
+    ]);
+
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      items,
+      total,
+      page,
+      limit,
+      totalPages,
+    };
   }
 
   async findPublishedBySlug(slug: string): Promise<PostEntity> {
@@ -91,7 +129,22 @@ export class PostsService {
 
   // --- админские методы ---
 
-  async findAll(page = 1, limit = 20): Promise<PaginatedResult<PostEntity>> {
+  async findAll(page = 1, limit = 10): Promise<PaginatedResult<PostEntity>> {
+    if (limit === 0) {
+      const items = await this.prisma.post.findMany({
+        orderBy: { createdAt: 'desc' },
+      });
+      const total = items.length;
+
+      return {
+        items,
+        total,
+        page: 1,
+        limit: 0,
+        totalPages: 1,
+      };
+    }
+
     const skip = (page - 1) * limit;
 
     const [items, total] = await this.prisma.$transaction([

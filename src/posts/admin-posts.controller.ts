@@ -21,9 +21,9 @@ import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Query } from '@nestjs/common';
-import { AdminPostsQueryDto } from './dto/admin-posts-query.dto';
 import { ApiQuery } from '@nestjs/swagger';
 import { PaginatedResult } from '../common/pagination/pagination.types';
+import { PaginationQueryDto } from '../common/pagination/pagination-query.dto';
 
 @ApiTags('Admin / Posts')
 @ApiBearerAuth()
@@ -36,7 +36,7 @@ export class AdminPostsController {
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
   async getAllPosts(
-    @Query() query: AdminPostsQueryDto,
+    @Query() query: PaginationQueryDto,
   ): Promise<PaginatedResult<PostEntity>> {
     const page = query.page ?? 1;
     const limit = query.limit ?? 10;

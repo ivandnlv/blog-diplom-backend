@@ -1,7 +1,8 @@
+// src/common/pagination/pagination-query.dto.ts
 import { Type } from 'class-transformer';
 import { IsInt, IsOptional, Min } from 'class-validator';
 
-export class AdminPostsQueryDto {
+export class PaginationQueryDto {
   @IsOptional()
   @Type(() => Number)
   @IsInt()
@@ -11,6 +12,6 @@ export class AdminPostsQueryDto {
   @IsOptional()
   @Type(() => Number)
   @IsInt()
-  @Min(1)
+  @Min(0) // <-- 0 = "выдай все"
   limit?: number;
 }

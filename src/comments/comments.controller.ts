@@ -1,4 +1,3 @@
-// src/comments/comments.controller.ts
 import {
   BadRequestException,
   Body,
@@ -6,6 +5,7 @@ import {
   Get,
   Param,
   Post,
+  Query,
 } from '@nestjs/common';
 import {
   CommentsService,
@@ -13,27 +13,35 @@ import {
   CreateCommentInput,
 } from './comments.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiTags, ApiQuery } from '@nestjs/swagger';
+import { PaginationQueryDto } from '../common/pagination/pagination-query.dto';
+import { PaginatedResult } from '../common/pagination/pagination.types';
 
 @ApiTags('Comments')
 @Controller('posts')
 export class CommentsController {
   constructor(private readonly commentsService: CommentsService) {}
 
-  // GET /posts/:postId/comments
+  // GET /api/posts/:postId/comments?page=&limit=
   @Get(':postId/comments')
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
   async getCommentsForPost(
     @Param('postId') postIdParam: string,
-  ): Promise<CommentEntity[]> {
+    @Query() query: PaginationQueryDto,
+  ): Promise<PaginatedResult<CommentEntity>> {
     const postId = Number(postIdParam);
     if (Number.isNaN(postId)) {
       throw new BadRequestException('Invalid post id');
     }
 
-    return this.commentsService.findApprovedByPostId(postId);
+    const page = query.page ?? 1;
+    const limit = query.limit ?? 10;
+
+    return this.commentsService.findApprovedByPostId(postId, page, limit);
   }
 
-  // POST /posts/:postId/comments
+  // POST /api/posts/:postId/comments — создание, тут пагинация не нужна
   @Post(':postId/comments')
   async createCommentForPost(
     @Param('postId') postIdParam: string,
