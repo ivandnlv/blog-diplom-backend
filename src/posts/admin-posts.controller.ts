@@ -24,6 +24,8 @@ import { Query } from '@nestjs/common';
 import { ApiQuery } from '@nestjs/swagger';
 import { PaginatedResult } from '../common/pagination/pagination.types';
 import { PaginationQueryDto } from '../common/pagination/pagination-query.dto';
+import { PostResponseDto } from './dto/post-response.dto';
+import { ApiOkResponseEnvelope } from '../common/http/swagger-helpers';
 
 @ApiTags('Admin / Posts')
 @ApiBearerAuth()
@@ -35,6 +37,7 @@ export class AdminPostsController {
   @Get()
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiOkResponseEnvelope(PostResponseDto, { isPaginated: true })
   async getAllPosts(
     @Query() query: PaginationQueryDto,
   ): Promise<PaginatedResult<PostEntity>> {
@@ -45,6 +48,7 @@ export class AdminPostsController {
   }
 
   @Post()
+  @ApiOkResponseEnvelope(PostResponseDto)
   async createPost(@Body() dto: CreatePostDto): Promise<PostEntity> {
     const input: CreatePostInput = {
       title: dto.title,
