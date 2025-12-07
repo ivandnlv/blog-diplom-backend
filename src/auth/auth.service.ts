@@ -3,6 +3,7 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
 import { User, UserRole } from '@prisma/client';
+import * as bcrypt from 'bcryptjs';
 
 @Injectable()
 export class AuthService {
@@ -10,6 +11,16 @@ export class AuthService {
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
   ) {}
+
+  private async comparePassword(plain: string, hash: string): Promise<boolean> {
+    return bcrypt.compare(plain, hash);
+  }
+
+  // опционально, пригодится позже для регистрации/смены пароля
+  async hashPassword(plain: string): Promise<string> {
+    const saltRounds = 10;
+    return bcrypt.hash(plain, saltRounds);
+  }
 
   private async validateUser(
     email: string,
@@ -23,9 +34,9 @@ export class AuthService {
       return null;
     }
 
-    // ⚠️ ВРЕМЕННО: сравниваем пароль в лоб.
-    // В следующем шаге заменим на нормальный hash (bcrypt или аналог).
-    if (user.passwordHash !== password) {
+    const isValid = await this.comparePassword(password, user.passwordHash);
+
+    if (!isValid) {
       return null;
     }
 
