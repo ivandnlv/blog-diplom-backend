@@ -20,7 +20,9 @@ export class CommentsController {
 
   // GET /posts/:postId/comments
   @Get(':postId/comments')
-  getCommentsForPost(@Param('postId') postIdParam: string): CommentEntity[] {
+  async getCommentsForPost(
+    @Param('postId') postIdParam: string,
+  ): Promise<CommentEntity[]> {
     const postId = Number(postIdParam);
     if (Number.isNaN(postId)) {
       throw new BadRequestException('Invalid post id');
@@ -31,10 +33,10 @@ export class CommentsController {
 
   // POST /posts/:postId/comments
   @Post(':postId/comments')
-  createCommentForPost(
+  async createCommentForPost(
     @Param('postId') postIdParam: string,
     @Body() dto: CreateCommentDto,
-  ): CommentEntity {
+  ): Promise<CommentEntity> {
     const postId = Number(postIdParam);
     if (Number.isNaN(postId)) {
       throw new BadRequestException('Invalid post id');
