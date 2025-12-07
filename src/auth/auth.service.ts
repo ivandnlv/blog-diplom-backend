@@ -1,17 +1,20 @@
+// src/auth/auth.service.ts
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly configService: ConfigService) {}
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly jwtService: JwtService,
+  ) {}
 
   private validateAdminCredentials(email: string, password: string): boolean {
     const adminEmail = this.configService.get<string>('ADMIN_EMAIL');
     const adminPassword = this.configService.get<string>('ADMIN_PASSWORD');
 
     if (!adminEmail || !adminPassword) {
-      // Здесь можно было бы кинуть InternalServerErrorException,
-      // но для простоты возвращаем false, а ошибка пойдёт как 401.
       return false;
     }
 
@@ -25,9 +28,15 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    // Пока заглушка. На следующем шаге заменим это на реальный JWT.
-    return {
-      accessToken: 'dummy-token',
+    // payload токена — минимальный, без лишнего
+    const payload = {
+      sub: 'admin', // subject — можем использовать строку, так как админ один
+      email,
+      role: 'admin',
     };
+
+    const accessToken = this.jwtService.sign(payload);
+
+    return { accessToken };
   }
 }
