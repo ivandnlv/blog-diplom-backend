@@ -9,7 +9,10 @@ import {
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CommentsService, CommentEntity } from './comments.service';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Admin / Comments')
+@ApiBearerAuth()
 @Controller('admin/comments')
 @UseGuards(JwtAuthGuard)
 export class AdminCommentsController {
