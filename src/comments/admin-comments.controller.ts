@@ -14,6 +14,8 @@ import { Query } from '@nestjs/common';
 import { ApiQuery } from '@nestjs/swagger';
 import { PaginatedResult } from '../common/pagination/pagination.types';
 import { PaginationQueryDto } from '../common/pagination/pagination-query.dto';
+import { ApiOkResponseEnvelope } from '../common/http/swagger-helpers';
+import { CommentResponseDto } from './dto/comment-response.dto';
 
 @ApiTags('Admin / Comments')
 @ApiBearerAuth()
@@ -25,6 +27,7 @@ export class AdminCommentsController {
   @Get()
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiOkResponseEnvelope(CommentResponseDto, { isPaginated: true })
   async getAllComments(
     @Query() query: PaginationQueryDto,
   ): Promise<PaginatedResult<CommentEntity>> {

@@ -16,6 +16,8 @@ import { CreateCommentDto } from './dto/create-comment.dto';
 import { ApiTags, ApiQuery } from '@nestjs/swagger';
 import { PaginationQueryDto } from '../common/pagination/pagination-query.dto';
 import { PaginatedResult } from '../common/pagination/pagination.types';
+import { ApiOkResponseEnvelope } from '../common/http/swagger-helpers';
+import { CommentResponseDto } from './dto/comment-response.dto';
 
 @ApiTags('Comments')
 @Controller('posts')
@@ -26,6 +28,7 @@ export class CommentsController {
   @Get(':postId/comments')
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiOkResponseEnvelope(CommentResponseDto, { isPaginated: true })
   async getCommentsForPost(
     @Param('postId') postIdParam: string,
     @Query() query: PaginationQueryDto,
