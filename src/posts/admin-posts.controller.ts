@@ -34,7 +34,6 @@ export class AdminPostsController {
   async createPost(@Body() dto: CreatePostDto): Promise<PostEntity> {
     const input: CreatePostInput = {
       title: dto.title,
-      slug: dto.slug,
       content: dto.content,
       published: dto.published ?? false,
     };
@@ -54,7 +53,6 @@ export class AdminPostsController {
 
     const input: UpdatePostInput = {
       title: dto.title,
-      slug: dto.slug,
       content: dto.content,
       published: dto.published,
     };
