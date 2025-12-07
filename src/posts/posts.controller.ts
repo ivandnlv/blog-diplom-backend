@@ -8,13 +8,13 @@ export class PostsController {
 
   // GET /posts — список опубликованных постов
   @Get()
-  getPublishedPosts(): PostEntity[] {
+  async getPublishedPosts(): Promise<PostEntity[]> {
     return this.postsService.findAllPublished();
   }
 
   // GET /posts/:slug — один опубликованный пост по slug
   @Get(':slug')
-  getPostBySlug(@Param('slug') slug: string): PostEntity {
+  async getPostBySlug(@Param('slug') slug: string): Promise<PostEntity> {
     return this.postsService.findPublishedBySlug(slug);
   }
 }

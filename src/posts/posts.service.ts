@@ -1,15 +1,9 @@
 // src/posts/posts.service.ts
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+import { Post } from '@prisma/client';
 
-export interface PostEntity {
-  id: number;
-  title: string;
-  slug: string;
-  content: string;
-  published: boolean;
-  createdAt: string; // ISO-строка, для простоты
-  updatedAt: string;
-}
+export type PostEntity = Post;
 
 export interface CreatePostInput {
   title: string;
@@ -27,35 +21,24 @@ export interface UpdatePostInput {
 
 @Injectable()
 export class PostsService {
-  private posts: PostEntity[] = [
-    {
-      id: 1,
-      title: 'Первый пост',
-      slug: 'pervyj-post',
-      content: 'Содержимое первого поста',
-      published: true,
-      createdAt: new Date('2025-01-01T00:00:00.000Z').toISOString(),
-      updatedAt: new Date('2025-01-01T00:00:00.000Z').toISOString(),
-    },
-    {
-      id: 2,
-      title: 'Черновик поста',
-      slug: 'chernovik-posta',
-      content: 'Этот пост пока не опубликован',
-      published: false,
-      createdAt: new Date('2025-01-02T00:00:00.000Z').toISOString(),
-      updatedAt: new Date('2025-01-02T00:00:00.000Z').toISOString(),
-    },
-  ];
+  constructor(private readonly prisma: PrismaService) {}
 
-  // Публичные методы уже есть...
+  // --- публичные методы ---
 
-  findAllPublished(): PostEntity[] {
-    return this.posts.filter((post) => post.published);
+  async findAllPublished(): Promise<PostEntity[]> {
+    return this.prisma.post.findMany({
+      where: { published: true },
+      orderBy: { createdAt: 'desc' },
+    });
   }
 
-  findPublishedBySlug(slug: string): PostEntity {
-    const post = this.posts.find((p) => p.slug === slug && p.published);
+  async findPublishedBySlug(slug: string): Promise<PostEntity> {
+    const post = await this.prisma.post.findFirst({
+      where: {
+        slug,
+        published: true,
+      },
+    });
 
     if (!post) {
       throw new NotFoundException('Post not found');
@@ -64,63 +47,49 @@ export class PostsService {
     return post;
   }
 
-  // ↓↓↓ Админские методы ↓↓↓
+  // --- админские методы ---
 
-  findAll(): PostEntity[] {
-    return this.posts;
+  async findAll(): Promise<PostEntity[]> {
+    return this.prisma.post.findMany({
+      orderBy: { createdAt: 'desc' },
+    });
   }
 
-  createPost(input: CreatePostInput): PostEntity {
-    const now = new Date().toISOString();
-
-    const newId =
-      this.posts.length === 0
-        ? 1
-        : Math.max(...this.posts.map((p) => p.id)) + 1;
-
-    const newPost: PostEntity = {
-      id: newId,
-      title: input.title,
-      slug: input.slug,
-      content: input.content,
-      published: input.published,
-      createdAt: now,
-      updatedAt: now,
-    };
-
-    this.posts.push(newPost);
-
-    return newPost;
+  async createPost(input: CreatePostInput): Promise<PostEntity> {
+    return this.prisma.post.create({
+      data: {
+        title: input.title,
+        slug: input.slug,
+        content: input.content,
+        published: input.published,
+      },
+    });
   }
 
-  updatePost(id: number, input: UpdatePostInput): PostEntity {
-    const postIndex = this.posts.findIndex((p) => p.id === id);
-
-    if (postIndex === -1) {
+  async updatePost(id: number, input: UpdatePostInput): Promise<PostEntity> {
+    try {
+      return await this.prisma.post.update({
+        where: { id },
+        data: {
+          // Prisma сам обновит updatedAt за счёт @updatedAt
+          ...input,
+        },
+      });
+    } catch (e) {
+      // Честно: здесь мы не различаем типы ошибок Prisma.
+      // Любая ошибка при update сейчас маппится в 404.
       throw new NotFoundException('Post not found');
     }
-
-    const existing = this.posts[postIndex];
-    const now = new Date().toISOString();
-
-    const updated: PostEntity = {
-      ...existing,
-      ...input,
-      updatedAt: now,
-    };
-
-    this.posts[postIndex] = updated;
-
-    return updated;
   }
 
-  deletePost(id: number): void {
-    const postIndex = this.posts.findIndex((p) => p.id === id);
-
-    if (postIndex === -1) {
+  async deletePost(id: number): Promise<void> {
+    try {
+      await this.prisma.post.delete({
+        where: { id },
+      });
+    } catch (e) {
+      // То же самое: любую ошибку удаления считаем "не найден".
       throw new NotFoundException('Post not found');
     }
-
-    this.posts.splice(postIndex, 1);
   }
 }

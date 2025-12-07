@@ -1,14 +1,14 @@
 // src/posts/admin-posts.controller.ts
 import {
+  BadRequestException,
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Patch,
   Post,
-  Delete,
   UseGuards,
-  BadRequestException,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import {
@@ -26,12 +26,12 @@ export class AdminPostsController {
   constructor(private readonly postsService: PostsService) {}
 
   @Get()
-  getAllPosts(): PostEntity[] {
+  async getAllPosts(): Promise<PostEntity[]> {
     return this.postsService.findAll();
   }
 
   @Post()
-  createPost(@Body() dto: CreatePostDto): PostEntity {
+  async createPost(@Body() dto: CreatePostDto): Promise<PostEntity> {
     const input: CreatePostInput = {
       title: dto.title,
       slug: dto.slug,
@@ -43,10 +43,10 @@ export class AdminPostsController {
   }
 
   @Patch(':id')
-  updatePost(
+  async updatePost(
     @Param('id') idParam: string,
     @Body() dto: UpdatePostDto,
-  ): PostEntity {
+  ): Promise<PostEntity> {
     const id = Number(idParam);
     if (Number.isNaN(id)) {
       throw new BadRequestException('Invalid post id');
@@ -63,12 +63,12 @@ export class AdminPostsController {
   }
 
   @Delete(':id')
-  deletePost(@Param('id') idParam: string): void {
+  async deletePost(@Param('id') idParam: string): Promise<void> {
     const id = Number(idParam);
     if (Number.isNaN(id)) {
       throw new BadRequestException('Invalid post id');
     }
 
-    this.postsService.deletePost(id);
+    await this.postsService.deletePost(id);
   }
 }
