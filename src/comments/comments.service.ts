@@ -41,4 +41,37 @@ export class CommentsService {
       },
     });
   }
+
+  // в CommentsService, под публичными методами
+
+  async findAll(): Promise<CommentEntity[]> {
+    return this.prisma.comment.findMany({
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+  }
+
+  async approveComment(id: number): Promise<CommentEntity> {
+    try {
+      return await this.prisma.comment.update({
+        where: { id },
+        data: {
+          isApproved: true,
+        },
+      });
+    } catch (_e) {
+      throw new Error('Comment not found');
+    }
+  }
+
+  async deleteComment(id: number): Promise<void> {
+    try {
+      await this.prisma.comment.delete({
+        where: { id },
+      });
+    } catch (_e) {
+      throw new Error('Comment not found');
+    }
+  }
 }
