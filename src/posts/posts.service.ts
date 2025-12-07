@@ -18,6 +18,13 @@ export interface CreatePostInput {
   published: boolean;
 }
 
+export interface UpdatePostInput {
+  title?: string;
+  slug?: string;
+  content?: string;
+  published?: boolean;
+}
+
 @Injectable()
 export class PostsService {
   private posts: PostEntity[] = [
@@ -84,5 +91,36 @@ export class PostsService {
     this.posts.push(newPost);
 
     return newPost;
+  }
+
+  updatePost(id: number, input: UpdatePostInput): PostEntity {
+    const postIndex = this.posts.findIndex((p) => p.id === id);
+
+    if (postIndex === -1) {
+      throw new NotFoundException('Post not found');
+    }
+
+    const existing = this.posts[postIndex];
+    const now = new Date().toISOString();
+
+    const updated: PostEntity = {
+      ...existing,
+      ...input,
+      updatedAt: now,
+    };
+
+    this.posts[postIndex] = updated;
+
+    return updated;
+  }
+
+  deletePost(id: number): void {
+    const postIndex = this.posts.findIndex((p) => p.id === id);
+
+    if (postIndex === -1) {
+      throw new NotFoundException('Post not found');
+    }
+
+    this.posts.splice(postIndex, 1);
   }
 }
