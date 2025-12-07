@@ -11,9 +11,15 @@ export interface PostEntity {
   updatedAt: string;
 }
 
+export interface CreatePostInput {
+  title: string;
+  slug: string;
+  content: string;
+  published: boolean;
+}
+
 @Injectable()
 export class PostsService {
-  // временное in-memory хранилище
   private posts: PostEntity[] = [
     {
       id: 1,
@@ -35,6 +41,8 @@ export class PostsService {
     },
   ];
 
+  // Публичные методы уже есть...
+
   findAllPublished(): PostEntity[] {
     return this.posts.filter((post) => post.published);
   }
@@ -47,5 +55,34 @@ export class PostsService {
     }
 
     return post;
+  }
+
+  // ↓↓↓ Админские методы ↓↓↓
+
+  findAll(): PostEntity[] {
+    return this.posts;
+  }
+
+  createPost(input: CreatePostInput): PostEntity {
+    const now = new Date().toISOString();
+
+    const newId =
+      this.posts.length === 0
+        ? 1
+        : Math.max(...this.posts.map((p) => p.id)) + 1;
+
+    const newPost: PostEntity = {
+      id: newId,
+      title: input.title,
+      slug: input.slug,
+      content: input.content,
+      published: input.published,
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    this.posts.push(newPost);
+
+    return newPost;
   }
 }
