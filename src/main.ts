@@ -4,6 +4,8 @@ import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { ResponseInterceptor } from './common/interceptors/response.interceptor';
+import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -16,19 +18,22 @@ async function bootstrap() {
     }),
   );
 
-  // --- Swagger setup ---
+  // <-- добавляем
+  app.useGlobalInterceptors(new ResponseInterceptor());
+  app.useGlobalFilters(new HttpExceptionFilter());
+  // -->
+
   const swaggerConfig = new DocumentBuilder()
     .setTitle('Blog API')
     .setDescription(
       'API для дипломного мини-блога (NestJS + Prisma + PostgreSQL)',
     )
     .setVersion('1.0.0')
-    .addBearerAuth() // для JWT Authorization: Bearer
+    .addBearerAuth()
     .build();
 
   const document = SwaggerModule.createDocument(app, swaggerConfig);
   SwaggerModule.setup('docs', app, document);
-  // --- /Swagger setup ---
 
   const configService = app.get(ConfigService);
   const port = configService.get<number>('PORT') ?? 3000;
