@@ -14,24 +14,5 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
-  backend:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: blog-backend
-    depends_on:
-      - postgres
-    env_file:
-      - .env
-    environment:
-      # ВАЖНО: внутри Docker бэкенд ходит к postgres по имени сервиса, а не localhost
-      DATABASE_URL: postgresqL://blog:blog@postgres:5432/blog?schema=public
-      PORT: 3000
-      # если в .env у тебя уже есть DATABASE_URL для локальной разработки,
-      # эта строка ПЕРЕОПРЕДЕЛИТ его для контейнера
-    ports:
-      - "3000:3000"
-    # при желании можно добавить restart: unless-stopped
-
 volumes:
   postgres_data:
