@@ -4,6 +4,7 @@ import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
 import { User, UserRole } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
+import { BASE_ERRORS } from '../common/base/base-errors';
 
 @Injectable()
 export class AuthService {
@@ -51,7 +52,7 @@ export class AuthService {
 
     // Пускаем в админку только ADMIN
     if (!user || user.role !== UserRole.ADMIN) {
-      throw new UnauthorizedException('Invalid credentials');
+      throw new UnauthorizedException(BASE_ERRORS['401']);
     }
 
     const payload = {
