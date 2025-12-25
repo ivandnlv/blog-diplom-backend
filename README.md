@@ -15,3 +15,10 @@ docker exec -it blog-postgres psql -U blog -d blog -c 'select count(*) from "Use
 docker exec -it blog-postgres psql -U blog -d blog -c 'select count(*) from "Post";'
 docker exec -it blog-postgres psql -U blog -d blog -c 'select count(*) from "Comment";'
 ```
+
+После этого: 
+```
+prisma generate
+
+npm run start:dev
+```
