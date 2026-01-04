@@ -16,6 +16,7 @@ import {
   PostEntity,
   CreatePostInput,
   UpdatePostInput,
+  PostListItemEntity,
 } from './posts.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
@@ -26,6 +27,7 @@ import { PaginatedResult } from '../common/pagination/pagination.types';
 import { PaginationQueryDto } from '../common/pagination/pagination-query.dto';
 import { PostResponseDto } from './dto/post-response.dto';
 import { ApiOkResponseEnvelope } from '../common/http/swagger-helpers';
+import { PostListItemResponseDto } from './dto/post-list-item-response.dto';
 
 @ApiTags('Admin / Posts')
 @ApiBearerAuth()
@@ -37,14 +39,25 @@ export class AdminPostsController {
   @Get()
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
-  @ApiOkResponseEnvelope(PostResponseDto, { isPaginated: true })
+  @ApiOkResponseEnvelope(PostListItemResponseDto, { isPaginated: true })
   async getAllPosts(
     @Query() query: PaginationQueryDto,
-  ): Promise<PaginatedResult<PostEntity>> {
+  ): Promise<PaginatedResult<PostListItemEntity>> {
     const page = query.page ?? 1;
     const limit = query.limit ?? 10;
 
     return this.postsService.findAll(page, limit);
+  }
+
+  @Get(':id')
+  @ApiOkResponseEnvelope(PostResponseDto)
+  async getPostById(@Param('id') idParam: string): Promise<PostEntity> {
+    const id = Number(idParam);
+    if (Number.isNaN(id)) {
+      throw new BadRequestException('Invalid post id');
+    }
+
+    return this.postsService.getPostDetailsById(id);
   }
 
   @Post()

@@ -10,6 +10,12 @@ import { PaginatedResult } from '../common/pagination/pagination.types';
 
 export type PostEntity = Post;
 
+// Минифицированная сущность для списков (без content)
+export type PostListItemEntity = Pick<
+  Post,
+  'id' | 'title' | 'slug' | 'published' | 'createdAt' | 'updatedAt'
+>;
+
 export interface CreatePostInput {
   title: string;
   content: string;
@@ -31,13 +37,9 @@ export class PostsService {
       title
         .toLowerCase()
         .trim()
-        // пробелы и подчёркивания -> дефис
         .replace(/[\s_]+/g, '-')
-        // убираем всё, кроме латиницы, цифр и дефисов
         .replace(/[^a-z0-9-]/g, '')
-        // несколько дефисов подряд -> один
         .replace(/-+/g, '-')
-        // убрать дефисы в начале/конце
         .replace(/^-|-$/g, '') || 'post'
     );
   }
@@ -47,10 +49,6 @@ export class PostsService {
     let slug = baseSlug;
     let counter = 1;
 
-    // простой цикл: пока есть такой slug — добавляем -1, -2 и т.д.
-    // да, это доп. запросы к БД, но для диплома и маленького проекта это норм.
-    // В редких гонках всё равно сможет выстрелить P2002, и это ок — у нас уже есть обработчик.
-    // (можно будет потом усложнить, если захочешь)
     // eslint-disable-next-line no-constant-condition
     while (true) {
       const existing = await this.prisma.post.findUnique({
@@ -67,20 +65,28 @@ export class PostsService {
 
   // --- публичные методы ---
 
+  // Список опубликованных: возвращаем минифицированные посты (без content)
   async findAllPublished(
     page = 1,
     limit = 10,
-  ): Promise<PaginatedResult<PostEntity>> {
+  ): Promise<PaginatedResult<PostListItemEntity>> {
     if (limit === 0) {
       const items = await this.prisma.post.findMany({
         where: { published: true },
         orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          title: true,
+          slug: true,
+          published: true,
+          createdAt: true,
+          updatedAt: true,
+        },
       });
-      const total = items.length;
 
       return {
         items,
-        total,
+        total: items.length,
         page: 1,
         limit: 0,
         totalPages: 1,
@@ -95,24 +101,31 @@ export class PostsService {
         orderBy: { createdAt: 'desc' },
         skip,
         take: limit,
+        select: {
+          id: true,
+          title: true,
+          slug: true,
+          published: true,
+          createdAt: true,
+          updatedAt: true,
+        },
       }),
       this.prisma.post.count({
         where: { published: true },
       }),
     ]);
 
-    const totalPages = Math.ceil(total / limit);
-
     return {
       items,
       total,
       page,
       limit,
-      totalPages,
+      totalPages: Math.ceil(total / limit),
     };
   }
 
-  async findPublishedBySlug(slug: string): Promise<PostEntity> {
+  // Детальная инфа по опубликованному посту: возвращаем полный пост (с content)
+  async getPublishedPostDetailsBySlug(slug: string): Promise<PostEntity> {
     const post = await this.prisma.post.findFirst({
       where: {
         slug,
@@ -129,16 +142,27 @@ export class PostsService {
 
   // --- админские методы ---
 
-  async findAll(page = 1, limit = 10): Promise<PaginatedResult<PostEntity>> {
+  // Список всех постов (админ): тоже минифицированный (без content)
+  async findAll(
+    page = 1,
+    limit = 10,
+  ): Promise<PaginatedResult<PostListItemEntity>> {
     if (limit === 0) {
       const items = await this.prisma.post.findMany({
         orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          title: true,
+          slug: true,
+          published: true,
+          createdAt: true,
+          updatedAt: true,
+        },
       });
-      const total = items.length;
 
       return {
         items,
-        total,
+        total: items.length,
         page: 1,
         limit: 0,
         totalPages: 1,
@@ -152,18 +176,24 @@ export class PostsService {
         orderBy: { createdAt: 'desc' },
         skip,
         take: limit,
+        select: {
+          id: true,
+          title: true,
+          slug: true,
+          published: true,
+          createdAt: true,
+          updatedAt: true,
+        },
       }),
       this.prisma.post.count(),
     ]);
-
-    const totalPages = Math.ceil(total / limit);
 
     return {
       items,
       total,
       page,
       limit,
-      totalPages,
+      totalPages: Math.ceil(total / limit),
     };
   }
 
@@ -180,7 +210,6 @@ export class PostsService {
         },
       });
     } catch (error) {
-      // На всякий случай оставляем P2002, как сетку безопасности
       if (
         error instanceof Prisma.PrismaClientKnownRequestError &&
         error.code === 'P2002'
@@ -197,13 +226,10 @@ export class PostsService {
       return await this.prisma.post.update({
         where: { id },
         data: {
-          // Prisma сам обновит updatedAt за счёт @updatedAt
           ...input,
         },
       });
     } catch (_e) {
-      // Честно: здесь мы не различаем типы ошибок Prisma.
-      // Любая ошибка при update сейчас маппится в 404.
       throw new NotFoundException('Post not found');
     }
   }
@@ -214,8 +240,19 @@ export class PostsService {
         where: { id },
       });
     } catch (_e) {
-      // То же самое: любую ошибку удаления считаем "не найден".
       throw new NotFoundException('Post not found');
     }
+  }
+
+  async getPostDetailsById(id: number): Promise<PostEntity> {
+    const post = await this.prisma.post.findUnique({
+      where: { id },
+    });
+
+    if (!post) {
+      throw new NotFoundException('Post not found');
+    }
+
+    return post;
   }
 }
