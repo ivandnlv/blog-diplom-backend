@@ -81,7 +81,7 @@ export class CommentsService {
         authorName: input.authorName,
         authorEmail: input.authorEmail ?? null,
         content: input.content,
-        isApproved: false, // новый комментарий ждёт модерации
+        isApproved: true,
       },
     });
   }
