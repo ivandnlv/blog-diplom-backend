@@ -22,7 +22,7 @@ model Post {
 model Comment {
   id          Int      @id @default(autoincrement())
   postId      Int
-  parentId    Int? // для вложенных комментариев, если есть
+  parentId    Int?
   authorName  String
   authorEmail String?
   content     String
@@ -32,7 +32,6 @@ model Comment {
 
   post Post @relation(fields: [postId], references: [id])
 
-  // самоссылка для дерева комментариев
   parent   Comment?  @relation("CommentToComment", fields: [parentId], references: [id])
   children Comment[] @relation("CommentToComment")
 }
