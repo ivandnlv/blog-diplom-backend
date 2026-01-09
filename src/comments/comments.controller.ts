@@ -14,10 +14,10 @@ import {
 } from './comments.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { ApiTags, ApiQuery } from '@nestjs/swagger';
-import { PaginationQueryDto } from '../common/pagination/pagination-query.dto';
 import { PaginatedResult } from '../common/pagination/pagination.types';
 import { ApiOkResponseEnvelope } from '../common/http/swagger-helpers';
 import { CommentResponseDto } from './dto/comment-response.dto';
+import { GetPostCommentsQueryDto } from './dto/get-post-comments.query.dto';
 
 @ApiTags('Comments')
 @Controller('posts')
@@ -31,8 +31,8 @@ export class CommentsController {
   @ApiOkResponseEnvelope(CommentResponseDto, { isPaginated: true })
   async getCommentsForPost(
     @Param('postId') postIdParam: string,
-    @Query() query: PaginationQueryDto,
-  ): Promise<PaginatedResult<CommentEntity>> {
+    @Query() query: GetPostCommentsQueryDto,
+  ): Promise<PaginatedResult<CommentResponseDto>> {
     const postId = Number(postIdParam);
     if (Number.isNaN(postId)) {
       throw new BadRequestException('Invalid post id');
@@ -40,8 +40,14 @@ export class CommentsController {
 
     const page = query.page ?? 1;
     const limit = query.limit ?? 10;
+    const parentId = query?.parentId;
 
-    return this.commentsService.findApprovedByPostId(postId, page, limit);
+    return this.commentsService.getForPost({
+      postId,
+      page,
+      limit,
+      parentId,
+    });
   }
 
   // POST /api/posts/:postId/comments — создание, тут пагинация не нужна

@@ -1,8 +1,13 @@
 // src/comments/comments.service.ts
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { Comment } from '@prisma/client';
 import { PaginatedResult } from '../common/pagination/pagination.types';
+import { CommentResponseDto } from './dto/comment-response.dto';
 
 export type CommentEntity = Comment;
 
@@ -17,6 +22,13 @@ export interface CreateCommentInput {
 export interface ModerateCommentInput {
   isApproved: boolean;
   moderationReason?: string;
+}
+
+export interface GetPostCommentsInput {
+  postId: number;
+  page?: number;
+  limit?: number;
+  parentId?: number;
 }
 
 @Injectable()
@@ -79,6 +91,30 @@ export class CommentsService {
   }
 
   async createForPost(input: CreateCommentInput): Promise<CommentEntity> {
+    const parentId: number | null = input?.parentId ?? null;
+
+    if (parentId) {
+      const parent = await this.prisma.comment.findFirst({
+        where: { id: parentId, postId: input.postId },
+        select: { id: true, parentId: true },
+      });
+
+      if (!parent) throw new NotFoundException('Parent comment not found');
+
+      if (parent.parentId) {
+        const parentParent = await this.prisma.comment.findUnique({
+          where: { id: parent.parentId },
+          select: { parentId: true },
+        });
+
+        if (parentParent?.parentId) {
+          throw new BadRequestException(
+            'Comments nesting depth is limited to 2 levels',
+          );
+        }
+      }
+    }
+
     return this.prisma.comment.create({
       data: {
         postId: input.postId,
@@ -178,5 +214,80 @@ export class CommentsService {
     } catch (_e) {
       throw new NotFoundException('Comment not found');
     }
+  }
+
+  async getForPost(input: {
+    postId: number;
+    page: number;
+    limit: number;
+    parentId?: number;
+  }): Promise<PaginatedResult<CommentResponseDto>> {
+    const { postId, page, limit } = input;
+    const parentId = input.parentId ?? null;
+
+    // Если указан parentId — валидируем, что родитель существует и относится к этому же посту
+    if (input.parentId) {
+      const parent = await this.prisma.comment.findFirst({
+        where: { id: input.parentId, postId },
+        select: { id: true, parentId: true },
+      });
+
+      if (!parent) throw new NotFoundException('Parent comment not found');
+
+      // Ограничение глубины выдачи (строго)
+      if (parent.parentId) {
+        const parentParent = await this.prisma.comment.findUnique({
+          where: { id: parent.parentId },
+          select: { parentId: true },
+        });
+
+        if (parentParent?.parentId) {
+          throw new BadRequestException(
+            'Comments nesting depth is limited to 2 levels',
+          );
+        }
+      }
+    }
+
+    const whereBase = {
+      postId,
+      isApproved: true,
+    };
+
+    const where = parentId
+      ? { ...whereBase, parentId }
+      : { ...whereBase, parentId: null };
+
+    const total = await this.prisma.comment.count({ where });
+
+    const queryArgs: any = {
+      where,
+      orderBy: { createdAt: 'asc' },
+      include: {
+        _count: { select: { children: true } }, // важно: relation name
+      },
+    };
+
+    if (limit !== 0) {
+      queryArgs.skip = (page - 1) * limit;
+      queryArgs.take = limit;
+    }
+
+    const rows = await this.prisma.comment.findMany(queryArgs);
+
+    const items: CommentResponseDto[] = rows.map((c: any) => {
+      const { _count, ...rest } = c;
+      return {
+        ...rest,
+        childrenCount: _count?.children ?? 0,
+      };
+    });
+
+    return {
+      items,
+      page,
+      limit,
+      total,
+    } as PaginatedResult<CommentResponseDto>;
   }
 }

@@ -28,4 +28,13 @@ export class CommentResponseDto {
 
   @ApiProperty()
   updatedAt: string;
+
+  @ApiProperty({ nullable: true })
+  moderationReason: string;
+
+  @ApiProperty({
+    example: 3,
+    description: 'Количество прямых дочерних комментариев (parentId = id)',
+  })
+  childrenCount: number;
 }
