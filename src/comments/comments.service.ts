@@ -1,5 +1,5 @@
 // src/comments/comments.service.ts
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { Comment } from '@prisma/client';
 import { PaginatedResult } from '../common/pagination/pagination.types';
@@ -12,6 +12,11 @@ export interface CreateCommentInput {
   authorName: string;
   authorEmail?: string | null;
   content: string;
+}
+
+export interface ModerateCommentInput {
+  isApproved: boolean;
+  moderationReason?: string;
 }
 
 @Injectable()
@@ -137,16 +142,31 @@ export class CommentsService {
     };
   }
 
-  async approveComment(id: number): Promise<CommentEntity> {
+  async moderateComment(
+    id: number,
+    input: ModerateCommentInput,
+  ): Promise<CommentEntity> {
+    // Доп. защита на уровне сервиса (помимо DTO)
+    if (
+      input.isApproved === false &&
+      (!input.moderationReason || input.moderationReason.trim().length === 0)
+    ) {
+      // можно кинуть BadRequestException, но чаще это ловится DTO
+      throw new Error('moderationReason is required when isApproved is false');
+    }
+
     try {
       return await this.prisma.comment.update({
         where: { id },
         data: {
-          isApproved: true,
+          isApproved: input.isApproved,
+          moderationReason: input.isApproved
+            ? null
+            : input.moderationReason!.trim(),
         },
       });
     } catch (_e) {
-      throw new Error('Comment not found');
+      throw new NotFoundException('Comment not found');
     }
   }
 
@@ -156,7 +176,7 @@ export class CommentsService {
         where: { id },
       });
     } catch (_e) {
-      throw new Error('Comment not found');
+      throw new NotFoundException('Comment not found');
     }
   }
 }

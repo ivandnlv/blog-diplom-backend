@@ -16,6 +16,8 @@ import { PaginatedResult } from '../common/pagination/pagination.types';
 import { PaginationQueryDto } from '../common/pagination/pagination-query.dto';
 import { ApiOkResponseEnvelope } from '../common/http/swagger-helpers';
 import { CommentResponseDto } from './dto/comment-response.dto';
+import { Body } from '@nestjs/common';
+import { ModerateCommentDto } from './dto/moderate-comment.dto';
 
 @ApiTags('Admin / Comments')
 @ApiBearerAuth()
@@ -37,15 +39,21 @@ export class AdminCommentsController {
     return this.commentsService.findAllPaginated(page, limit);
   }
 
-  // PATCH /admin/comments/:id/approve — одобрение комментария
-  @Patch(':id/approve')
-  async approveComment(@Param('id') idParam: string): Promise<CommentEntity> {
+  // PATCH /admin/comments/:id/moderate — модерация комментария
+  @Patch(':id/moderate')
+  async moderate(
+    @Param('id') idParam: string,
+    @Body() dto: ModerateCommentDto,
+  ): Promise<CommentEntity> {
     const id = Number(idParam);
     if (Number.isNaN(id)) {
       throw new BadRequestException('Invalid comment id');
     }
 
-    return this.commentsService.approveComment(id);
+    return this.commentsService.moderateComment(id, {
+      isApproved: dto.isApproved,
+      moderationReason: dto.moderationReason,
+    });
   }
 
   // DELETE /admin/comments/:id — удалить комментарий
