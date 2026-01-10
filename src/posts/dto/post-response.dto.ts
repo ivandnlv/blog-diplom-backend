@@ -22,4 +22,10 @@ export class PostResponseDto {
 
   @ApiProperty()
   updatedAt: string;
+
+  @ApiProperty()
+  thumbnailUrl?: string;
+
+  @ApiProperty()
+  contentImagesUrls?: string[];
 }

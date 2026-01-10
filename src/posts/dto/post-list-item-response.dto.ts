@@ -19,4 +19,10 @@ export class PostListItemResponseDto {
 
   @ApiProperty()
   updatedAt: string;
+
+  @ApiProperty()
+  thumbnailUrl?: string;
+
+  @ApiProperty()
+  contentImagesUrls?: string[];
 }

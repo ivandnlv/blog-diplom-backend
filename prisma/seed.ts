@@ -22,8 +22,8 @@ async function main() {
 
   // Важно: имя таблицы и колонок совпадает с тем, что у тебя в БД: "User"
   const query = `
-    INSERT INTO "User" ("email", "passwordHash", "role", "createdAt", "updatedAt")
-    VALUES ($1, $2, $3, NOW(), NOW())
+    INSERT INTO "User" ("email","username","avatarUrl","passwordHash","role","createdAt","updatedAt")
+    VALUES ($1,$2,$3,$4,$5,NOW(),NOW())
     ON CONFLICT ("email") DO NOTHING
   `;
 

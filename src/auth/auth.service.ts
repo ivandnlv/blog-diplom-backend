@@ -2,10 +2,9 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
-import { User, UserRole } from '@prisma/client';
+import { User } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
-import { BASE_ERRORS } from '../common/base/base-errors';
-import { UsersService } from '../users/users.service';
+import { CreateUserInput, UsersService } from '../users/users.service';
 
 @Injectable()
 export class AuthService {
@@ -50,8 +49,8 @@ export class AuthService {
     return this.jwtService.signAsync({ sub: id, email, role });
   }
 
-  async register(email: string, password: string) {
-    const user = await this.usersService.createUser(email, password);
+  async register(input: CreateUserInput) {
+    const user = await this.usersService.createUser(input);
     const accessToken = await this.signToken(user.id, user.email, user.role);
     return { user, accessToken };
   }

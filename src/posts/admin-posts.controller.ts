@@ -70,6 +70,8 @@ export class AdminPostsController {
       title: dto.title,
       content: dto.content,
       published: dto.published ?? false,
+      contentImagesUrls: dto.contentImagesUrls,
+      thumbnailUrl: dto.thumbnailUrl,
     };
 
     return this.postsService.createPost(input);
@@ -89,6 +91,8 @@ export class AdminPostsController {
       title: dto.title,
       content: dto.content,
       published: dto.published,
+      contentImagesUrls: dto.contentImagesUrls,
+      thumbnailUrl: dto.thumbnailUrl,
     };
 
     return this.postsService.updatePost(id, input);

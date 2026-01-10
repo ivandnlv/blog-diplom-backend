@@ -20,12 +20,16 @@ export interface CreatePostInput {
   title: string;
   content: string;
   published: boolean;
+  thumbnailUrl?: string;
+  contentImagesUrls?: string[];
 }
 
 export interface UpdatePostInput {
   title?: string;
   content?: string;
   published?: boolean;
+  thumbnailUrl?: string;
+  contentImagesUrls?: string[];
 }
 
 @Injectable()
@@ -105,6 +109,8 @@ export class PostsService {
           id: true,
           title: true,
           slug: true,
+          thumbnailUrl: true,
+          contentImagesUrls: true,
           published: true,
           createdAt: true,
           updatedAt: true,
@@ -154,6 +160,8 @@ export class PostsService {
           id: true,
           title: true,
           slug: true,
+          thumbnailUrl: true,
+          contentImagesUrls: true,
           published: true,
           createdAt: true,
           updatedAt: true,
@@ -180,6 +188,8 @@ export class PostsService {
           id: true,
           title: true,
           slug: true,
+          thumbnailUrl: true,
+          contentImagesUrls: true,
           published: true,
           createdAt: true,
           updatedAt: true,
@@ -207,6 +217,8 @@ export class PostsService {
           slug,
           content: input.content,
           published: input.published,
+          thumbnailUrl: input.thumbnailUrl,
+          contentImagesUrls: input.contentImagesUrls,
         },
       });
     } catch (error) {
