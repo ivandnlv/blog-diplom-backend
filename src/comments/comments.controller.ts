@@ -7,17 +7,16 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
-import {
-  CommentsService,
-  CommentEntity,
-  CreateCommentInput,
-} from './comments.service';
+import { CommentsService } from './comments.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { ApiTags, ApiQuery } from '@nestjs/swagger';
 import { PaginatedResult } from '../common/pagination/pagination.types';
 import { ApiOkResponseEnvelope } from '../common/http/swagger-helpers';
 import { CommentResponseDto } from './dto/comment-response.dto';
 import { GetPostCommentsQueryDto } from './dto/get-post-comments.query.dto';
+import { UseGuards } from '@nestjs/common';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
 @ApiTags('Comments')
 @Controller('posts')
@@ -51,24 +50,21 @@ export class CommentsController {
   }
 
   // POST /api/posts/:postId/comments — создание, тут пагинация не нужна
+  @UseGuards(JwtAuthGuard)
   @Post(':postId/comments')
-  async createCommentForPost(
+  async createComment(
     @Param('postId') postIdParam: string,
     @Body() dto: CreateCommentDto,
-  ): Promise<CommentEntity> {
+    @CurrentUser() user: CurrentUser,
+  ) {
     const postId = Number(postIdParam);
-    if (Number.isNaN(postId)) {
-      throw new BadRequestException('Invalid post id');
-    }
+    if (Number.isNaN(postId)) throw new BadRequestException('Invalid post id');
 
-    const input: CreateCommentInput = {
+    return this.commentsService.createForPost({
       postId,
-      parentId: dto.parentId,
-      authorName: dto.authorName,
-      authorEmail: dto.authorEmail,
+      parentId: dto.parentId ?? null,
       content: dto.content,
-    };
-
-    return this.commentsService.createForPost(input);
+      authorId: user.id,
+    });
   }
 }

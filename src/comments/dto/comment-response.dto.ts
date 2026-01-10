@@ -1,6 +1,11 @@
 // src/posts/dto/post-response.dto.ts
 import { ApiProperty } from '@nestjs/swagger';
 
+class CommentAuthorDto {
+  @ApiProperty() id: number;
+  @ApiProperty() email: string;
+}
+
 export class CommentResponseDto {
   @ApiProperty()
   id: number;
@@ -31,6 +36,9 @@ export class CommentResponseDto {
 
   @ApiProperty({ nullable: true })
   moderationReason: string;
+
+  @ApiProperty({ type: CommentAuthorDto })
+  author: CommentAuthorDto;
 
   @ApiProperty({
     example: 3,

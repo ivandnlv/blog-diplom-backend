@@ -1,36 +1,20 @@
-import { IsEmail, IsOptional, IsString, Length, IsInt } from 'class-validator';
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiPropertyOptional, ApiProperty } from '@nestjs/swagger';
+import { IsInt, IsOptional, IsString, Length, Min } from 'class-validator';
+import { Transform } from 'class-transformer';
 
 export class CreateCommentDto {
-  @ApiProperty({
-    example: 'Гость',
-    description: 'Имя автора комментария',
-  })
+  @ApiProperty({ example: 'Текст комментария' })
   @IsString()
-  @Length(1, 100)
-  authorName: string;
-
-  @ApiPropertyOptional({
-    example: 'guest@example.com',
-    description: 'Email автора комментария (опционально)',
-  })
-  @IsOptional()
-  @IsEmail()
-  authorEmail?: string;
-
-  @ApiProperty({
-    example: 'Очень полезный пост!',
-    description: 'Текст комментария',
-  })
-  @IsString()
-  @Length(1, 2000)
+  @Length(1, 5000)
   content: string;
 
   @ApiPropertyOptional({
-    example: 1,
-    description: 'ID родительского комментария для вложенных комментариев',
+    example: 123,
+    description: 'ID родительского комментария',
   })
   @IsOptional()
+  @Transform(({ value }) => Number(value))
   @IsInt()
-  parentId?: number | null;
+  @Min(1)
+  parentId?: number;
 }

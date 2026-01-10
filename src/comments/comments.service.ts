@@ -14,9 +14,8 @@ export type CommentEntity = Comment;
 export interface CreateCommentInput {
   postId: number;
   parentId?: number | null;
-  authorName: string;
-  authorEmail?: string | null;
   content: string;
+  authorId: number;
 }
 
 export interface ModerateCommentInput {
@@ -93,6 +92,7 @@ export class CommentsService {
   async createForPost(input: CreateCommentInput): Promise<CommentEntity> {
     const parentId: number | null = input?.parentId ?? null;
 
+    // 1) Ограничение глубины (как у тебя уже есть)
     if (parentId) {
       const parent = await this.prisma.comment.findFirst({
         where: { id: parentId, postId: input.postId },
@@ -115,14 +115,16 @@ export class CommentsService {
       }
     }
 
+    // 2) Теперь комментарий создаёт только авторизованный пользователь
     return this.prisma.comment.create({
       data: {
         postId: input.postId,
-        parentId: input.parentId ?? null,
-        authorName: input.authorName,
-        authorEmail: input.authorEmail ?? null,
+        parentId,
         content: input.content,
+
+        authorId: input.authorId,
         isApproved: true,
+        moderationReason: null,
       },
     });
   }
@@ -264,7 +266,8 @@ export class CommentsService {
       where,
       orderBy: { createdAt: 'asc' },
       include: {
-        _count: { select: { children: true } }, // важно: relation name
+        _count: { select: { children: true } },
+        author: { select: { id: true, email: true } },
       },
     };
 
