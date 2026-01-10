@@ -18,11 +18,14 @@ import { ApiOkResponseEnvelope } from '../common/http/swagger-helpers';
 import { CommentResponseDto } from './dto/comment-response.dto';
 import { Body } from '@nestjs/common';
 import { ModerateCommentDto } from './dto/moderate-comment.dto';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { RolesGuard } from '../auth/guards/roles.guard';
 
 @ApiTags('Admin / Comments')
 @ApiBearerAuth()
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('ADMIN')
 @Controller('admin/comments')
-@UseGuards(JwtAuthGuard)
 export class AdminCommentsController {
   constructor(private readonly commentsService: CommentsService) {}
 

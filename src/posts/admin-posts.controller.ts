@@ -28,11 +28,14 @@ import { PaginationQueryDto } from '../common/pagination/pagination-query.dto';
 import { PostResponseDto } from './dto/post-response.dto';
 import { ApiOkResponseEnvelope } from '../common/http/swagger-helpers';
 import { PostListItemResponseDto } from './dto/post-list-item-response.dto';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { RolesGuard } from '../auth/guards/roles.guard';
 
 @ApiTags('Admin / Posts')
 @ApiBearerAuth()
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('ADMIN')
 @Controller('admin/posts')
-@UseGuards(JwtAuthGuard)
 export class AdminPostsController {
   constructor(private readonly postsService: PostsService) {}
 
