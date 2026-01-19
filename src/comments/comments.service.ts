@@ -167,6 +167,10 @@ export class CommentsService {
     const [items, total] = await this.prisma.$transaction([
       this.prisma.comment.findMany({
         where,
+        include: {
+          _count: { select: { children: true } },
+          author: true,
+        },
         orderBy: { createdAt: 'desc' },
         skip,
         take: limit,
@@ -177,7 +181,14 @@ export class CommentsService {
     const totalPages = Math.ceil(total / limit);
 
     return {
-      items,
+      items: items.map((item) => {
+        const { _count, ...rest } = item;
+
+        return {
+          ...rest,
+          childrenCount: _count?.children ?? 0,
+        };
+      }),
       total,
       page,
       limit,
