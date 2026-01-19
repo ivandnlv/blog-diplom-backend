@@ -142,9 +142,13 @@ export class CommentsService {
   async findAllPaginated(
     page = 1,
     limit = 20,
+    postId?: number,
   ): Promise<PaginatedResult<CommentEntity>> {
+    const where = postId !== undefined ? { postId } : undefined;
+
     if (limit === 0) {
       const items = await this.prisma.comment.findMany({
+        where,
         orderBy: { createdAt: 'desc' },
       });
       const total = items.length;
@@ -162,11 +166,12 @@ export class CommentsService {
 
     const [items, total] = await this.prisma.$transaction([
       this.prisma.comment.findMany({
+        where,
         orderBy: { createdAt: 'desc' },
         skip,
         take: limit,
       }),
-      this.prisma.comment.count(),
+      this.prisma.comment.count({ where }),
     ]);
 
     const totalPages = Math.ceil(total / limit);

@@ -1,10 +1,4 @@
-import {
-  BadRequestException,
-  Controller,
-  Get,
-  Param,
-  Query,
-} from '@nestjs/common';
+import { Controller, Get, Param, Query } from '@nestjs/common';
 import { PostsService, PostListItemEntity, PostEntity } from './posts.service';
 import { ApiTags, ApiQuery } from '@nestjs/swagger';
 import { PaginationQueryDto } from '../common/pagination/pagination-query.dto';

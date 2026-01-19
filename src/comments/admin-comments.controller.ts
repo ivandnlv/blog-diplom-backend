@@ -13,13 +13,13 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Query } from '@nestjs/common';
 import { ApiQuery } from '@nestjs/swagger';
 import { PaginatedResult } from '../common/pagination/pagination.types';
-import { PaginationQueryDto } from '../common/pagination/pagination-query.dto';
 import { ApiOkResponseEnvelope } from '../common/http/swagger-helpers';
 import { CommentResponseDto } from './dto/comment-response.dto';
 import { Body } from '@nestjs/common';
 import { ModerateCommentDto } from './dto/moderate-comment.dto';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { RolesGuard } from '../auth/guards/roles.guard';
+import { AdminCommentListQueryDto } from './dto/admin-comment-list-query.dto';
 
 @ApiTags('Admin / Comments')
 @ApiBearerAuth()
@@ -32,14 +32,24 @@ export class AdminCommentsController {
   @Get()
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiQuery({ name: 'postId', required: false, type: Number })
   @ApiOkResponseEnvelope(CommentResponseDto, { isPaginated: true })
   async getAllComments(
-    @Query() query: PaginationQueryDto,
+    @Query() query: AdminCommentListQueryDto,
   ): Promise<PaginatedResult<CommentEntity>> {
     const page = query.page ?? 1;
     const limit = query.limit ?? 10;
 
-    return this.commentsService.findAllPaginated(page, limit);
+    let postId: number | undefined = undefined;
+
+    if (query.postId !== undefined) {
+      postId = Number(query.postId);
+      if (Number.isNaN(postId)) {
+        throw new BadRequestException('Invalid post id');
+      }
+    }
+
+    return this.commentsService.findAllPaginated(page, limit, postId);
   }
 
   // PATCH /admin/comments/:id/moderate — модерация комментария
