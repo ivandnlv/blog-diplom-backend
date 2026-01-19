@@ -38,6 +38,5 @@ export class CreatePostDto {
 
   @IsOptional()
   @IsArray()
-  @IsString()
   contentImagesUrls?: string[];
 }

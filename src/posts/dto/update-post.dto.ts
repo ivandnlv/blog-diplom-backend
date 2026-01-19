@@ -40,6 +40,5 @@ export class UpdatePostDto {
 
   @IsOptional()
   @IsArray()
-  @IsString()
   contentImagesUrls?: string[];
 }
