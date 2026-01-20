@@ -32,10 +32,20 @@ export class CreatePostDto {
   @IsBoolean()
   published?: boolean;
 
+  @ApiPropertyOptional({
+    example: true,
+    description:
+      'Ссылка на файл картинки, например: https://avatars.mds.yandex.net/i?id=4888b77867180de87ce8a65417c30d00_l-5910699-images-thumbs&n=13',
+  })
   @IsOptional()
   @IsString()
   thumbnailUrl?: string;
 
+  @ApiPropertyOptional({
+    example: true,
+    description:
+      'Массив ссылок на картинки, которые прикреплены внутри content',
+  })
   @IsOptional()
   @IsArray()
   contentImagesUrls?: string[];
