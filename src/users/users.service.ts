@@ -5,6 +5,7 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { UpdateMeDto } from '../auth/dto/update-me.dto';
 import { AdminUpdateUserDto } from './dto/admin-update-user.dto';
 import { Prisma } from '@prisma/client';
+import { AdminUserResponseDto } from './dto/admin-user-response.dto';
 
 export interface CreateUserInput {
   email: string;
@@ -39,6 +40,18 @@ export class UsersService {
 
   async findByEmail(email: string) {
     return this.prisma.user.findUnique({ where: { email } });
+  }
+
+  async getUserById(id: number): Promise<AdminUserResponseDto> {
+    return this.prisma.user.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        email: true,
+        username: true,
+        avatarUrl: true,
+      },
+    });
   }
 
   async getMe(user: CurrentUser) {
@@ -124,7 +137,7 @@ export class UsersService {
           updatedAt: true,
         },
       }),
-      this.prisma.user.count(),
+      this.prisma.user.count({ where: { role: 'USER' } }),
     ]);
 
     const totalPages = Math.ceil(total / limit);
@@ -154,8 +167,8 @@ export class UsersService {
         data.avatarUrl = dto.avatarUrl;
       }
 
-      if (dto.newPassword !== undefined) {
-        data.passwordHash = await bcrypt.hash(dto.newPassword, 10);
+      if (dto.password !== undefined) {
+        data.passwordHash = await bcrypt.hash(dto.password, 10);
       }
       if (Object.keys(data).length === 0) {
         return this.prisma.user.findUnique({

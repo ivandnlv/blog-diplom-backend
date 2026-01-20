@@ -11,7 +11,7 @@ cat backup.dump | docker exec -i blog-postgres pg_restore -l | head -n 30
 ```
 Восстановить:
 ```
-cat backup.dump | docker exec -i blog-postgres pg_restore -U blog -d blog -c
+cat backup.dump | docker exec -i blog-postgres pg_restore -U blog -d blog -c --if-exists
 ```
 
 Быстрая проверка, что все восстановилось:

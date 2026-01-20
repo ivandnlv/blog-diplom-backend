@@ -19,6 +19,11 @@ import { PaginationQueryDto } from '../common/pagination/pagination-query.dto';
 import { UsersService } from './users.service';
 import { AdminUpdateUserDto } from './dto/admin-update-user.dto';
 import { AdminCreateUserDto } from './dto/admin-create-user.dto';
+import { ApiOkResponseEnvelope } from '../common/http/swagger-helpers';
+import { PostResponseDto } from '../posts/dto/post-response.dto';
+import { PostEntity } from '../posts/posts.service';
+import { User } from '@prisma/client';
+import { AdminUserResponseDto } from './dto/admin-user-response.dto';
 
 @ApiTags('Admin / Users')
 @ApiBearerAuth()
@@ -39,6 +44,19 @@ export class AdminUsersController {
     const limit = query.limit ?? 10;
 
     return this.usersService.findAllPaginated(page, limit);
+  }
+
+  @Get(':id')
+  @ApiOkResponseEnvelope(AdminUserResponseDto)
+  async getUserById(
+    @Param('id') idParam: string,
+  ): Promise<AdminUserResponseDto> {
+    const id = Number(idParam);
+    if (Number.isNaN(id)) {
+      throw new BadRequestException('Invalid user id');
+    }
+
+    return this.usersService.getUserById(id);
   }
 
   // PATCH /admin/users/:id
