@@ -2,7 +2,7 @@ import { ConflictException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcryptjs';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { UpdateMeDto } from './dto/update-me.dto';
+import { UpdateMeDto } from '../auth/dto/update-me.dto';
 import { AdminUpdateUserDto } from './dto/admin-update-user.dto';
 import { Prisma } from '@prisma/client';
 
