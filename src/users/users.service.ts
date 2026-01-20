@@ -2,6 +2,7 @@ import { ConflictException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcryptjs';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { UpdateMeDto } from './dto/update-me.dto';
 
 export interface CreateUserInput {
   email: string;
@@ -43,6 +44,37 @@ export class UsersService {
       where: {
         id: user.id,
       },
+    });
+  }
+
+  async updateMe(user: CurrentUser, dto: UpdateMeDto) {
+    const data: {
+      username?: string;
+      avatarUrl?: string | null;
+      passwordHash?: string;
+    } = {};
+
+    if (dto.username !== undefined) {
+      data.username = dto.username;
+    }
+
+    if (dto.avatarUrl !== undefined) {
+      // avatarUrl nullable в prisma
+      data.avatarUrl = dto.avatarUrl;
+    }
+
+    if (dto.newPassword !== undefined) {
+      data.passwordHash = await bcrypt.hash(dto.newPassword, 10);
+    }
+
+    // если вообще нечего обновлять
+    if (Object.keys(data).length === 0) {
+      return this.getMe(user);
+    }
+
+    return this.prisma.user.update({
+      where: { id: user.id },
+      data,
     });
   }
 }
