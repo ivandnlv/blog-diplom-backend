@@ -1,13 +1,19 @@
 # Восстановление
 
-Залить дамп в контейнер:
+Создать дамп:
 ```
-docker cp ./full.sql blog-postgres:/tmp/full.sql
+docker exec blog-postgres pg_dump -U <Имя юзера в бд> -d <Имя бд> -F c > backup.dump  
+```
+
+Посмотреть корректность дампа:
+```
+cat backup.dump | docker exec -i blog-postgres pg_restore -l | head -n 30
 ```
 Восстановить:
 ```
-docker exec -i blog-postgres psql -U blog -f /tmp/full.sql
+cat backup.dump | docker exec -i blog-postgres pg_restore -U blog -d blog -c
 ```
+
 Быстрая проверка, что все восстановилось:
 
 ```
