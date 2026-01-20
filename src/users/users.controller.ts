@@ -7,11 +7,11 @@ import { UpdateMeDto } from './dto/update-me.dto';
 import { ApiTags } from '@nestjs/swagger';
 
 @ApiTags('Users')
+@UseGuards(JwtAuthGuard)
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @UseGuards(JwtAuthGuard)
   @Get('me')
   getMe(@CurrentUser() user: CurrentUser) {
     // req.user заполняется JwtStrategy.validate
@@ -23,7 +23,6 @@ export class UsersController {
     return this.usersService.getMe(user);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Patch('me')
   updateMe(@CurrentUser() user: CurrentUser, @Body() dto: UpdateMeDto) {
     return this.usersService.updateMe(user, dto);
