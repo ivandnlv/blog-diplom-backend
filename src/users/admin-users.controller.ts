@@ -6,6 +6,7 @@ import {
   Get,
   Param,
   Patch,
+  Post,
   Query,
   UseGuards,
 } from '@nestjs/common';
@@ -17,6 +18,7 @@ import { PaginatedResult } from '../common/pagination/pagination.types';
 import { PaginationQueryDto } from '../common/pagination/pagination-query.dto';
 import { UsersService } from './users.service';
 import { AdminUpdateUserDto } from './dto/admin-update-user.dto';
+import { AdminCreateUserDto } from './dto/admin-create-user.dto';
 
 @ApiTags('Admin / Users')
 @ApiBearerAuth()
@@ -62,5 +64,15 @@ export class AdminUsersController {
     }
 
     await this.usersService.deleteUser(id);
+  }
+
+  @Post()
+  async createUser(@Body() dto: AdminCreateUserDto) {
+    return this.usersService.createUser({
+      email: dto.email,
+      password: dto.password,
+      username: dto.username,
+      avatarUrl: dto.avatarUrl,
+    });
   }
 }
