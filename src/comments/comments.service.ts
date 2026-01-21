@@ -283,7 +283,7 @@ export class CommentsService {
       orderBy: { createdAt: 'asc' },
       include: {
         _count: { select: { children: true } },
-        author: { select: { id: true, email: true } },
+        author: { select: { id: true, email: true, avatarUrl: true } },
       },
     };
 
